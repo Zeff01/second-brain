@@ -59,3 +59,13 @@ export async function queryVectors(
 
   return results;
 }
+
+/**
+ * Delete all vectors from the Pinecone index
+ */
+export async function deleteAllVectors() {
+  const index = await getIndex();
+
+  // Delete all vectors by deleting all records in the namespace
+  await index.deleteAll();
+}

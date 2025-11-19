@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processEpisodes } from '@/lib/chunking';
 import { batchGenerateEmbeddings } from '@/lib/embeddings';
-import { upsertVectors } from '@/lib/vectordb';
+import { upsertVectors, deleteAllVectors } from '@/lib/vectordb';
 import type { Episode } from '@/lib/types';
 import type { RecordMetadata } from '@pinecone-database/pinecone';
 import fs from 'fs/promises';
@@ -14,6 +14,11 @@ import path from 'path';
 
 export async function POST(request: NextRequest) {
   try {
+    // Delete all existing vectors first to ensure clean re-ingestion
+    console.log('Deleting all existing vectors from Pinecone...');
+    await deleteAllVectors();
+    console.log('All vectors deleted successfully');
+
     // Load transcript data
     const transcriptPath = path.join(process.cwd(), 'data', 'transcripts.json');
     const transcriptData = await fs.readFile(transcriptPath, 'utf-8');

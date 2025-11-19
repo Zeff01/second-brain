@@ -16,24 +16,12 @@ export function EpisodeCard({ result }: EpisodeCardProps) {
   const { episodeNumber, episodeTitle, episodeDate, sourceUrl } = metadata;
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Log the original text to see what we're receiving
-  console.log('=== ORIGINAL TEXT FROM API ===');
-  console.log('Episode:', episodeNumber);
-  console.log('Raw text:', text);
-  console.log('Text length:', text.length);
-  console.log('First 200 chars:', text.substring(0, 200));
-
-  // Clean up text by removing tilde characters, backslashes, and extra whitespace
+  // Clean up text by removing any remaining special characters and extra whitespace
   const cleanText = text
     .replace(/~/g, ' ')
     .replace(/\\/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-
-  console.log('=== CLEANED TEXT ===');
-  console.log('Cleaned text:', cleanText);
-  console.log('Cleaned length:', cleanText.length);
-  console.log('First 200 chars:', cleanText.substring(0, 200));
 
   // Format the score as a percentage
   const relevanceScore = Math.round(score * 100);
