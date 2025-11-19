@@ -16,9 +16,10 @@ export function EpisodeCard({ result }: EpisodeCardProps) {
   const { episodeNumber, episodeTitle, episodeDate, sourceUrl } = metadata;
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Clean up text by removing tilde characters and extra whitespace
+  // Clean up text by removing tilde characters, backslashes, and extra whitespace
   const cleanText = text
-    .replace(/~/g, '')
+    .replace(/~/g, ' ')
+    .replace(/\\/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -26,7 +27,7 @@ export function EpisodeCard({ result }: EpisodeCardProps) {
   const relevanceScore = Math.round(score * 100);
 
   // Check if text is long enough to need expansion
-  const needsExpansion = cleanText.length > 500;
+  const needsExpansion = cleanText.length > 400;
 
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200">
@@ -64,19 +65,16 @@ export function EpisodeCard({ result }: EpisodeCardProps) {
       </CardHeader>
       <CardContent>
         <div className="relative">
-          <p className={`text-gray-700 leading-relaxed whitespace-pre-line ${!isExpanded && needsExpansion ? 'line-clamp-8' : ''}`}>
+          <p className={`text-gray-700 leading-relaxed ${!isExpanded && needsExpansion ? 'line-clamp-6' : ''}`}>
             {cleanText}
           </p>
-          {!isExpanded && needsExpansion && (
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
-          )}
         </div>
         {needsExpansion && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="mt-2 text-blue-600 hover:text-blue-800 p-0 h-auto font-normal cursor-pointer"
+            className="mt-3 text-blue-600 hover:text-blue-800 p-0 h-auto font-normal cursor-pointer"
           >
             {isExpanded ? (
               <>

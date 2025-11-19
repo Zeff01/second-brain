@@ -15,25 +15,32 @@ export function chunkText(
   chunkSize: number = 1500,
   overlap: number = 200
 ): string[] {
+  // Clean the text first: replace tildes with spaces and normalize whitespace
+  const cleanedText = text
+    .replace(/~/g, ' ')
+    .replace(/\\/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
   const chunks: string[] = [];
   let startIndex = 0;
 
-  while (startIndex < text.length) {
+  while (startIndex < cleanedText.length) {
     // Skip any leading whitespace at the start of this chunk
-    while (startIndex < text.length && /\s/.test(text[startIndex])) {
+    while (startIndex < cleanedText.length && /\s/.test(cleanedText[startIndex])) {
       startIndex++;
     }
 
-    if (startIndex >= text.length) break;
+    if (startIndex >= cleanedText.length) break;
 
     // Get chunk
     let endIndex = startIndex + chunkSize;
 
     // If not at the end, try to break at a sentence boundary
-    if (endIndex < text.length) {
+    if (endIndex < cleanedText.length) {
       // Look for sentence endings near the chunk boundary
       const searchStart = Math.max(startIndex, endIndex - 100);
-      const searchText = text.substring(searchStart, endIndex + 100);
+      const searchText = cleanedText.substring(searchStart, endIndex + 100);
       const sentenceEndings = ['. ', '! ', '? ', '.\n', '!\n', '?\n'];
 
       let bestBreak = -1;
@@ -50,7 +57,7 @@ export function chunkText(
     }
 
     // Extract chunk
-    const chunk = text.substring(startIndex, Math.min(endIndex, text.length));
+    const chunk = cleanedText.substring(startIndex, Math.min(endIndex, cleanedText.length));
     if (chunk.trim().length > 0) {
       chunks.push(chunk.trim());
     }
@@ -60,8 +67,8 @@ export function chunkText(
 
     // Find the start of the next sentence within the overlap region
     // Look backwards from nextStart to find a sentence ending
-    if (nextStart > startIndex && nextStart < text.length) {
-      const overlapText = text.substring(nextStart - 50, nextStart + 50);
+    if (nextStart > startIndex && nextStart < cleanedText.length) {
+      const overlapText = cleanedText.substring(nextStart - 50, nextStart + 50);
       const sentenceStarts = ['. ', '! ', '? ', '.\n', '!\n', '?\n'];
 
       let bestStart = -1;
@@ -81,7 +88,7 @@ export function chunkText(
     startIndex = nextStart;
 
     // Prevent infinite loop
-    if (startIndex <= endIndex - chunkSize && endIndex < text.length) {
+    if (startIndex <= endIndex - chunkSize && endIndex < cleanedText.length) {
       startIndex = endIndex;
     }
   }
