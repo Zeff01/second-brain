@@ -22,78 +22,46 @@ export function chunkText(
     .replace(/\s+/g, ' ')
     .trim();
 
+  // Split into sentences first
+  const sentences = cleanedText.split(/(?<=[.!?])\s+/);
+
   const chunks: string[] = [];
-  let startIndex = 0;
+  let currentChunk: string[] = [];
+  let currentLength = 0;
 
-  while (startIndex < cleanedText.length) {
-    // Skip any leading whitespace at the start of this chunk
-    while (startIndex < cleanedText.length && /\s/.test(cleanedText[startIndex])) {
-      startIndex++;
-    }
+  for (const sentence of sentences) {
+    const sentenceLength = sentence.length;
 
-    if (startIndex >= cleanedText.length) break;
+    // If adding this sentence would exceed chunk size and we have content
+    if (currentLength + sentenceLength > chunkSize && currentChunk.length > 0) {
+      // Save current chunk
+      chunks.push(currentChunk.join(' '));
 
-    // Get chunk
-    let endIndex = startIndex + chunkSize;
+      // Start new chunk with overlap (last few sentences)
+      const overlapSentences: string[] = [];
+      let overlapLength = 0;
 
-    // If not at the end, try to break at a sentence boundary
-    if (endIndex < cleanedText.length) {
-      // Look for sentence endings near the chunk boundary
-      const searchStart = Math.max(startIndex, endIndex - 100);
-      const searchText = cleanedText.substring(searchStart, endIndex + 100);
-      const sentenceEndings = ['. ', '! ', '? ', '.\n', '!\n', '?\n'];
-
-      let bestBreak = -1;
-      for (const ending of sentenceEndings) {
-        const index = searchText.lastIndexOf(ending);
-        if (index > bestBreak) {
-          bestBreak = index;
-        }
+      // Take sentences from the end of current chunk for overlap
+      for (let i = currentChunk.length - 1; i >= 0 && overlapLength < overlap; i--) {
+        overlapSentences.unshift(currentChunk[i]);
+        overlapLength += currentChunk[i].length + 1;
       }
 
-      if (bestBreak !== -1) {
-        endIndex = searchStart + bestBreak + 2; // Include the punctuation and space
-      }
+      currentChunk = overlapSentences;
+      currentLength = overlapLength;
     }
 
-    // Extract chunk
-    const chunk = cleanedText.substring(startIndex, Math.min(endIndex, cleanedText.length));
-    if (chunk.trim().length > 0) {
-      chunks.push(chunk.trim());
-    }
-
-    // Move to next chunk with overlap, but find a good starting point
-    let nextStart = endIndex - overlap;
-
-    // Find the start of the next sentence within the overlap region
-    // Look backwards from nextStart to find a sentence ending
-    if (nextStart > startIndex && nextStart < cleanedText.length) {
-      const overlapText = cleanedText.substring(nextStart - 50, nextStart + 50);
-      const sentenceStarts = ['. ', '! ', '? ', '.\n', '!\n', '?\n'];
-
-      let bestStart = -1;
-      for (const ending of sentenceStarts) {
-        const index = overlapText.indexOf(ending);
-        if (index !== -1 && (bestStart === -1 || index < bestStart)) {
-          bestStart = index;
-        }
-      }
-
-      if (bestStart !== -1) {
-        // Start after the sentence ending (skip punctuation and space)
-        nextStart = nextStart - 50 + bestStart + 2;
-      }
-    }
-
-    startIndex = nextStart;
-
-    // Prevent infinite loop
-    if (startIndex <= endIndex - chunkSize && endIndex < cleanedText.length) {
-      startIndex = endIndex;
-    }
+    // Add sentence to current chunk
+    currentChunk.push(sentence);
+    currentLength += sentenceLength + 1; // +1 for space
   }
 
-  return chunks;
+  // Add the last chunk if it has content
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk.join(' '));
+  }
+
+  return chunks.filter(chunk => chunk.trim().length > 0);
 }
 
 /**
